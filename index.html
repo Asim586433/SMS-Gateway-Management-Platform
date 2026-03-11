@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMS Gateway Management Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .sidebar-active {
+            background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+        }
+        
+        .status-online {
+            @apply bg-green-100 text-green-800;
+        }
+        
+        .status-offline {
+            @apply bg-red-100 text-red-800;
+        }
+        
+        .status-standby {
+            @apply bg-yellow-100 text-yellow-800;
+        }
+        
+        .message-sent {
+            @apply bg-green-100 text-green-800;
+        }
+        
+        .message-pending {
+            @apply bg-yellow-100 text-yellow-800;
+        }
+        
+        .message-failed {
+            @apply bg-red-100 text-red-800;
+        }
+        
+        .transition-all {
+            transition: all 0.3s ease;
+        }
+        
+        .hover-lift:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Login Modal -->
+    <div id="loginModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl w-96 p-6">
+            <div class="text-center mb-6">
+                <i class="fas fa-sms text-4xl text-blue-600 mb-2"></i>
+                <h2 class="text-2xl font-bold text-gray-800">SMS Gateway</h2>
+                <p class="text-gray-600">Sign in to your account</p>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input type="email" id="loginEmail" value="admin@example.com" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <input type="password" id="loginPassword" value="admin123" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <button onclick="handleLogin()" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                    Sign In
+                </button>
+            </div>
+            
+            <div class="mt-4 text-center text-sm text-gray-600">
+                Demo Credentials: admin@example.com / admin123
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="mainApp" class="hidden">
+        <!-- Sidebar -->
+        <div class="fixed inset-y-0 left-0 w-64 bg-white shadow-lg">
+            <div class="flex items-center justify-center h-16 border-b">
+                <i class="fas fa-sms text-2xl text-blue-600 mr-2"></i>
+                <span class="text-xl font-bold text-gray-800">SMS Gateway</span>
+            </div>
+            
+            <nav class="mt-6">
+                <div class="px-4 space-y-2">
+                    <a href="#" onclick="showPage('dashboard')" class="sidebar-item flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-blue-50 transition-colors" id="nav-dashboard">
+                        <i class="fas fa-tachometer-alt w-5 h-5 mr-3"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="#" onclick="showPage('gateways')" class="sidebar-item flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-blue-50 transition-colors" id="nav-gateways">
+                        <i class="fas fa-network-wired w-5 h-5 mr-3"></i>
+                        <span>Gateways</span>
+                    </a>
+                    <a href="#" onclick="showPage('sims')" class="sidebar-item flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-blue-50 transition-colors" id="nav-sims">
+                        <i class="fas fa-sim-card w-5 h-5 mr-3"></i>
+                        <span>SIM Cards</span>
+                    </a>
+                    <a href="#" onclick="showPage('send')" class="sidebar-item flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-blue-50 transition-colors" id="nav-send">
+                        <i class="fas fa-paper-plane w-5 h-5 mr-3"></i>
+                        <span>Send SMS</span>
+                    </a>
+                    <a href="#" onclick="showPage('bulk')" class="sidebar-item flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-blue-50 transition-colors" id="nav-bulk">
+                        <i class="fas fa-envelopes-bulk w-5 h-5 mr-3"></i>
+                        <span>Bulk SMS</span>
+                    </a>
+                    <a href="#" onclick="showPage('inbox')" class="sidebar-item flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-blue-50 transition-colors" id="nav-inbox">
+                        <i class="fas fa-inbox w-5 h-5 mr-3"></i>
+                        <span>Inbox</span>
+                    </a>
+                    <a href="#" onclick="showPage('campaigns')" class="sidebar-item flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-blue-50 transition-colors" id="nav-campaigns">
+                        <i class="fas fa-bullhorn w-5 h-5 mr-3"></i>
+                        <span>Campaigns</span>
+                    </a>
+                    <a href="#" onclick="showPage('analytics')" class="sidebar-item flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-blue-50 transition-colors" id="nav-analytics">
+                        <i class="fas fa-chart-bar w-5 h-5 mr-3"></i>
+                        <span>Analytics</span>
+                    </a>
+                </div>
+                
+                <div class="absolute bottom-0 w-64 p-4 border-t">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
+                            <span class="text-white font-semibold">AD</span>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-semibold text-gray-800">Admin User</p>
+                            <p class="text-xs text-gray-600">admin@example.com</p>
+                        </div>
+                        <button onclick="handleLogout()" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="ml-64 p-8">
+            <!-- Top Bar -->
+            <div class="flex justify-between items-center mb-8">
+                <h1 class="text-2xl font-bold text-gray-800" id="pageTitle">Dashboard</h1>
+                
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <i class="fas fa-bell text-gray-500 text-xl"></li>
+                        <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">3</span>
+                    </div>
+                    <div class="flex items-center space-x-2 bg-white px-4 py-2 rounded-lg shadow-sm">
+                        <i class="fas fa-clock text-gray-400"></i>
+                        <span class="text-sm text-gray-600" id="currentDateTime"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Page -->
+            <div id="page-dashboard" class="page">
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white rounded-lg shadow p-6 hover-lift transition-all">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600">Total Gateways</p>
+                                <p class="text-2xl font-bold text-gray-800" id="totalGateways">3</p>
+                            </div>
+                            <div class="bg-blue-100 p-3 rounded-lg">
+                                <i class="fas fa-network-wired text-blue-600 text-xl"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4 text-sm text-green-600">
+                            <i class="fas fa-arrow-up mr-1"></i>2 online
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg shadow p-6 hover-lift transition-all">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600">Active SIMs</p>
+                                <p class="text-2xl font-bold text-gray-800" id="activeSims">24</p>
+                            </div>
+                            <div class="bg-green-100 p-3 rounded-lg">
+                                <i class="fas fa-sim-card text-green-600 text-xl"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4 text-sm text-gray-600">
+                            <i class="fas fa-circle text-green-500 mr-1 text-xs"></i>24 active
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg shadow p-6 hover-lift transition-all">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600">Sent Today</p>
+                                <p class="text-2xl font-bold text-gray-800" id="sentToday">3,452</p>
+                            </div>
+                            <div class="bg-purple-100 p-3 rounded-lg">
+                                <i class="fas fa-paper-plane text-purple-600 text-xl"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4 text-sm text-green-600">
+                            <i class="fas fa-arrow-up mr-1"></i>12% increase
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg shadow p-6 hover-lift transition-all">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600">Inbound Today</p>
+                                <p class="text-2xl font-bold text-gray-800" id="inboundToday">98</p>
+                            </div>
+                            <div class="bg-orange-100 p-3 rounded-lg">
+                                <i class="fas fa-inbox text-orange-600 text-xl"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4 text-sm text-red-600">
+                            <i class="fas fa-arrow-down mr-1"></i>5% decrease
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Row -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold mb-4">SMS Volume (Last 7 Days)</h3>
+                        <canvas id="smsChart" height="200"></canvas>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold mb-4">Gateway Health</h3>
+                        <div class="space-y-4" id="gatewayHealth">
+                            <!-- Populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Messages -->
+                <div class="bg-white rounded-lg shadow">
+                    <div class="px-6 py-4 border-b flex justify-between items-center">
+                        <h3 class="text-lg font-semibold">Recent Messages</h3>
+                        <button class="text-blue-600 text-sm hover:text-blue-800">View All</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Direction</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">From/To</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Message</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Time</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200" id="recentMessages">
+                                <!-- Populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gateways Page -->
+            <div id="page-gateways" class="page hidden">
+                <div class="mb-6 flex justify-between items-center">
+                    <h2 class="text-xl font-semibold">Gateway Management</h2>
+                    <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                        <i class="fas fa-plus mr-2"></i>Add Gateway
+                    </button>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="gatewayList">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- SIMs Page -->
+            <div id="page-sims" class="page hidden">
+                <div class="mb-6 flex justify-between items-center">
+                    <h2 class="text-xl font-semibold">SIM Card Management</h2>
+                    <div class="space-x-2">
+                        <button class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                            <i class="fas fa-sync-alt mr-2"></i>Update Limits
+                        </button>
+                        <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                            <i class="fas fa-plus mr-2"></i>Add SIM
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow overflow-hidden">
+                    <table class="w-full">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone Number</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Gateway</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Port</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sent Today</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Daily Limit</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200" id="simList">
+                            <!-- Populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Send SMS Page -->
+            <div id="page-send" class="page hidden">
+                <div class="max-w-2xl">
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold mb-4">Send Single SMS</h3>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                                <input type="text" id="sendPhone" placeholder="+447700900222" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Message</label>
+                                <textarea id="sendMessage" rows="4" placeholder="Type your message here..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                                <div class="text-right text-sm text-gray-500 mt-1">
+                                    <span id="charCount">0</span>/1600
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Campaign (Optional)</label>
+                                <input type="text" id="sendCampaign" placeholder="e.g., Marketing Campaign" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            
+                            <button onclick="sendSingleSMS()" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                                <i class="fas fa-paper-plane mr-2"></i>Send SMS
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Stats -->
+                    <div class="grid grid-cols-3 gap-4 mt-6">
+                        <div class="bg-blue-50 rounded-lg p-4">
+                            <p class="text-sm text-blue-600">Available SIMs</p>
+                            <p class="text-2xl font-bold text-blue-900">18</p>
+                        </div>
+                        <div class="bg-green-50 rounded-lg p-4">
+                            <p class="text-sm text-green-600">Daily Remaining</p>
+                            <p class="text-2xl font-bold text-green-900">3,548</p>
+                        </div>
+                        <div class="bg-purple-50 rounded-lg p-4">
+                            <p class="text-sm text-purple-600">Cost Estimate</p>
+                            <p class="text-2xl font-bold text-purple-900">$0.04</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bulk SMS Page -->
+            <div id="page-bulk" class="page hidden">
+                <div class="max-w-2xl">
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold mb-4">Send Bulk SMS</h3>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Recipients</label>
+                                <textarea id="bulkRecipients" rows="4" placeholder="Enter phone numbers (one per line)&#10;+447700900301&#10;+447700900302&#10;+447700900303" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                                <div class="text-right text-sm text-gray-500 mt-1" id="recipientCount">0 recipients</div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Message</label>
+                                <textarea id="bulkMessage" rows="4" placeholder="Type your message here..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                                <div class="text-right text-sm text-gray-500 mt-1">
+                                    <span id="bulkCharCount">0</span>/1600
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Campaign Name</label>
+                                <input type="text" id="bulkCampaign" placeholder="e.g., Promo-April" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            
+                            <button onclick="sendBulkSMS()" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                                <i class="fas fa-envelopes-bulk mr-2"></i>Send Bulk SMS
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inbox Page -->
+            <div id="page-inbox" class="page hidden">
+                <div class="mb-6 flex justify-between items-center">
+                    <h2 class="text-xl font-semibold">Inbox</h2>
+                    <div class="flex space-x-2">
+                        <input type="text" placeholder="Search messages..." class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <button class="bg-gray-100 px-4 py-2 rounded-lg hover:bg-gray-200">
+                            <i class="fas fa-filter"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow overflow-hidden">
+                    <table class="w-full">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">From</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">To</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Message</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Received</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200" id="inboxMessages">
+                            <!-- Populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Campaigns Page -->
+            <div id="page-campaigns" class="page hidden">
+                <div class="mb-6 flex justify-between items-center">
+                    <h2 class="text-xl font-semibold">SMS Campaigns</h2>
+                    <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                        <i class="fas fa-plus mr-2"></i>New Campaign
+                    </button>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="campaignList">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Analytics Page -->
+            <div id="page-analytics" class="page hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold mb-4">SMS Volume by Gateway</h3>
+                        <canvas id="gatewayChart" height="200"></canvas>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold mb-4">Delivery Status</h3>
+                        <canvas id="deliveryChart" height="200"></canvas>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-semibold mb-4">Campaign Performance</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Campaign</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sent</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Delivered</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Failed</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rate</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200" id="campaignPerformance">
+                                <!-- Populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg transform transition-transform translate-y-20 opacity-0">
+        <i class="fas fa-check-circle mr-2"></i>
+        <span id="toastMessage">Message sent successfully!</span>
+    </div>
+
+    <script>
+        // Sample Data
+        const gateways = [
+            { id: 1, name: 'Gateway-A', ip: '192.168.1.20', provider: 'GoIP', ports: 16, status: 'online', activeSims: 14 },
+            { id: 2, name: 'Gateway-B', ip: '192.168.1.21', provider: 'Dinstar', ports: 8, status: 'online', activeSims: 6 },
+            { id: 3, name: 'Gateway-C', ip: '192.168.1.22', provider: 'OpenVox', ports: 4, status: 'offline', activeSims: 0 }
+        ];
+
+        const sims = [
+            { id: 1, phone: '+447700900111', gateway: 'Gateway-A', port: 1, status: 'active', sent: 132, limit: 200 },
+            { id: 2, phone: '+447700900112', gateway: 'Gateway-A', port: 2, status: 'active', sent: 98, limit: 200 },
+            { id: 3, phone: '+447700900113', gateway: 'Gateway-A', port: 3, status: 'active', sent: 145, limit: 200 },
+            { id: 4, phone: '+447700900114', gateway: 'Gateway-A', port: 4, status: 'standby', sent: 0, limit: 200 },
+            { id: 5, phone: '+447700900201', gateway: 'Gateway-B', port: 1, status: 'active', sent: 76, limit: 200 },
+            { id: 6, phone: '+447700900202', gateway: 'Gateway-B', port: 2, status: 'active', sent: 89, limit: 200 }
+        ];
+
+        const messages = [
+            { id: 1, direction: 'outbound', from: '+447700900111', to: '+447700900222', message: 'Hello John, this is a test message.', status: 'sent', time: '2026-03-11T10:30:00' },
+            { id: 2, direction: 'inbound', from: '+447700900333', to: '+447700900111', message: 'Thanks for your message!', status: 'received', time: '2026-03-11T10:32:00' },
+            { id: 3, direction: 'outbound', from: '+447700900112', to: '+447700900444', message: 'Your verification code is 123456', status: 'delivered', time: '2026-03-11T10:35:00' },
+            { id: 4, direction: 'outbound', from: '+447700900113', to: '+447700900555', message: 'Promo: Get 50% off today only!', status: 'pending', time: '2026-03-11T10:40:00' },
+            { id: 5, direction: 'inbound', from: '+447700900666', to: '+447700900111', message: 'STOP', status: 'received', time: '2026-03-11T10:45:00' }
+        ];
+
+        const campaigns = [
+            { id: 1, name: 'Marketing-April', sent: 1250, delivered: 1125, failed: 125, rate: '90%' },
+            { id: 2, name: 'Customer-Satisfaction', sent: 850, delivered: 765, failed: 85, rate: '90%' },
+            { id: 3, name: 'Promo-Summer', sent: 2100, delivered: 1890, failed: 210, rate: '90%' }
+        ];
+
+        // Current user
+        let currentUser = null;
+
+        // Initialize the app
+        function initApp() {
+            updateDateTime();
+            setInterval(updateDateTime, 1000);
+            
+            // Populate all sections
+            populateGatewayHealth();
+            populateRecentMessages();
+            populateGatewayList();
+            populateSimList();
+            populateInbox();
+            populateCampaignList();
+            populateCampaignPerformance();
+            
+            // Initialize charts
+            initCharts();
+        }
+
+        // Handle Login
+        function handleLogin() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            if (email === 'admin@example.com' && password === 'admin123') {
+                currentUser = { email, role: 'admin' };
+                document.getElementById('loginModal').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+                initApp();
+                showToast('Login successful!');
+            } else {
+                alert('Invalid credentials');
+            }
+        }
+
+        // Handle Logout
+        function handleLogout() {
+            currentUser = null;
+            document.getElementById('mainApp').classList.add('hidden');
+            document.getElementById('loginModal').classList.remove('hidden');
+        }
+
+        // Show different pages
+        function showPage(page) {
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+            
+            // Show selected page
+            document.getElementById(`page-${page}`).classList.remove('hidden');
+            
+            // Update page title
+            document.getElementById('pageTitle').textContent = page.charAt(0).toUpperCase() + page.slice(1);
+            
+            // Update active nav
+            document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('sidebar-active'));
+            document.getElementById(`nav-${page}`).classList.add('sidebar-active');
+            
+            // Refresh charts if on analytics page
+            if (page === 'analytics') {
+                setTimeout(() => {
+                    initCharts();
+                }, 100);
+            }
+        }
+
+        // Update date/time
+        function updateDateTime() {
+            const now = new Date();
+            document.getElementById('currentDateTime').textContent = now.toLocaleString();
+        }
+
+        // Populate gateway health
+        function populateGatewayHealth() {
+            const container = document.getElementById('gatewayHealth');
+            container.innerHTML = gateways.map(g => `
+                <div class="flex items-center justify-between p-3 border rounded-lg">
+                    <div class="flex items-center space-x-3">
+                        <i class="fas fa-${g.status === 'online' ? 'check-circle text-green-500' : 'exclamation-circle text-red-500'}"></i>
+                        <div>
+                            <p class="font-medium">${g.name}</p>
+                            <p class="text-sm text-gray-500">${g.activeSims} active SIMs</p>
+                        </div>
+                    </div>
+                    <span class="px-2 py-1 text-xs rounded-full ${g.status === 'online' ? 'status-online' : 'status-offline'}">
+                        ${g.status}
+                    </span>
+                </div>
+            `).join('');
+        }
+
+        // Populate recent messages
+        function populateRecentMessages() {
+            const tbody = document.getElementById('recentMessages');
+            tbody.innerHTML = messages.slice(0, 5).map(m => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-1 text-xs rounded-full ${m.direction === 'inbound' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}">
+                            ${m.direction}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4">${m.direction === 'inbound' ? m.from : m.to}</td>
+                    <td class="px-6 py-4 max-w-xs truncate">${m.message}</td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-1 text-xs rounded-full ${m.status === 'sent' || m.status === 'received' ? 'bg-green-100 text-green-800' : m.status === 'failed' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}">
+                            ${m.status}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-500">${new Date(m.time).toLocaleTimeString()}</td>
+                </tr>
+            `).join('');
+        }
+
+        // Populate gateway list
+        function populateGatewayList() {
+            const container = document.getElementById('gatewayList');
+            container.innerHTML = gateways.map(g => `
+                <div class="bg-white rounded-lg shadow p-6 hover-lift transition-all">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="text-lg font-semibold">${g.name}</h3>
+                            <p class="text-sm text-gray-500">${g.provider}</p>
+                        </div>
+                        <span class="px-2 py-1 text-xs rounded-full ${g.status === 'online' ? 'status-online' : 'status-offline'}">
+                            ${g.status}
+                        </span>
+                    </div>
+                    <div class="space-y-2 text-sm">
+                        <p><i class="fas fa-ip mr-2 text-gray-400"></i> ${g.ip}</p>
+                        <p><i class="fas fa-plug mr-2 text-gray-400"></i> ${g.ports} ports</p>
+                        <p><i class="fas fa-sim-card mr-2 text-gray-400"></i> ${g.activeSims} active SIMs</p>
+                    </div>
+                    <div class="mt-4 flex space-x-2">
+                        <button class="flex-1 bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 text-sm">Manage</button>
+                        <button class="px-3 py-1 border rounded hover:bg-gray-50 text-sm">Details</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Populate SIM list
+        function populateSimList() {
+            const tbody = document.getElementById('simList');
+            tbody.innerHTML = sims.map(s => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 font-mono">${s.phone}</td>
+                    <td class="px-6 py-4">${s.gateway}</td>
+                    <td class="px-6 py-4">Port ${s.port}</td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-1 text-xs rounded-full ${s.status === 'active' ? 'status-online' : 'status-standby'}">
+                            ${s.status}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4">${s.sent}</td>
+                    <td class="px-6 py-4">${s.limit}</td>
+                    <td class="px-6 py-4">
+                        <button class="text-blue-600 hover:text-blue-800 mr-2"><i class="fas fa-edit"></i></button>
+                        <button class="text-red-600 hover:text-red-800"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Populate inbox
+        function populateInbox() {
+            const tbody = document.getElementById('inboxMessages');
+            const inboxMessages = messages.filter(m => m.direction === 'inbound');
+            tbody.innerHTML = inboxMessages.map(m => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 font-mono">${m.from}</td>
+                    <td class="px-6 py-4 font-mono">${m.to}</td>
+                    <td class="px-6 py-4 max-w-xs">${m.message}</td>
+                    <td class="px-6 py-4 text-sm text-gray-500">${new Date(m.time).toLocaleString()}</td>
+                    <td class="px-6 py-4">
+                        <button class="text-blue-600 hover:text-blue-800"><i class="fas fa-reply"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Populate campaign list
+        function populateCampaignList() {
+            const container = document.getElementById('campaignList');
+            container.innerHTML = campaigns.map(c => `
+                <div class="bg-white rounded-lg shadow p-6 hover-lift transition-all">
+                    <div class="flex justify-between items-start mb-4">
+                        <h3 class="text-lg font-semibold">${c.name}</h3>
+                        <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Active</span>
+                    </div>
+                    <div class="space-y-2 text-sm">
+                        <p><i class="fas fa-paper-plane mr-2 text-gray-400"></i> ${c.sent} sent</p>
+                        <p><i class="fas fa-check-circle mr-2 text-gray-400"></i> ${c.delivered} delivered</p>
+                        <p><i class="fas fa-chart-line mr-2 text-gray-400"></i> ${c.rate} success rate</p>
+                    </div>
+                    <div class="mt-4">
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-green-600 h-2 rounded-full" style="width: ${c.rate}"></div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Populate campaign performance table
+        function populateCampaignPerformance() {
+            const tbody = document.getElementById('campaignPerformance');
+            tbody.innerHTML = campaigns.map(c => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 font-medium">${c.name}</td>
+                    <td class="px-6 py-4">${c.sent}</td>
+                    <td class="px-6 py-4">${c.delivered}</td>
+                    <td class="px-6 py-4">${c.failed}</td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
+                            ${c.rate}
+                        </span>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Initialize charts
+        function initCharts() {
+            // SMS Volume Chart
+            const smsCtx = document.getElementById('smsChart')?.getContext('2d');
+            if (smsCtx) {
+                new Chart(smsCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                        datasets: [{
+                            label: 'Sent',
+                            data: [450, 520, 480, 610, 590, 420, 380],
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            tension: 0.4
+                        }, {
+                            label: 'Received',
+                            data: [120, 140, 110, 160, 150, 90, 80],
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false
+                    }
+                });
+            }
+
+            // Gateway Chart
+            const gatewayCtx = document.getElementById('gatewayChart')?.getContext('2d');
+            if (gatewayCtx) {
+                new Chart(gatewayCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Gateway-A', 'Gateway-B', 'Gateway-C'],
+                        datasets: [{
+                            label: 'Messages Sent',
+                            data: [2150, 980, 0],
+                            backgroundColor: ['#3b82f6', '#10b981', '#ef4444']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false
+                    }
+                });
+            }
+
+            // Delivery Chart
+            const deliveryCtx = document.getElementById('deliveryChart')?.getContext('2d');
+            if (deliveryCtx) {
+                new Chart(deliveryCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Delivered', 'Failed', 'Pending'],
+                        datasets: [{
+                            data: [2850, 320, 180],
+                            backgroundColor: ['#10b981', '#ef4444', '#f59e0b']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false
+                    }
+                });
+            }
+        }
+
+        // Send Single SMS
+        function sendSingleSMS() {
+            const phone = document.getElementById('sendPhone').value;
+            const message = document.getElementById('sendMessage').value;
+            const campaign = document.getElementById('sendCampaign').value;
+            
+            if (!phone || !message) {
+                showToast('Please fill in all required fields', 'error');
+                return;
+            }
+            
+            // Simulate sending
+            showToast('SMS queued successfully!');
+            
+            // Clear form
+            document.getElementById('sendPhone').value = '';
+            document.getElementById('sendMessage').value = '';
+            document.getElementById('sendCampaign').value = '';
+            document.getElementById('charCount').textContent = '0';
+        }
+
+        // Send Bulk SMS
+        function sendBulkSMS() {
+            const recipients = document.getElementById('bulkRecipients').value.split('\n').filter(r => r.trim());
+            const message = document.getElementById('bulkMessage').value;
+            const campaign = document.getElementById('bulkCampaign').value;
+            
+            if (recipients.length === 0 || !message) {
+                showToast('Please fill in all required fields', 'error');
+                return;
+            }
+            
+            // Simulate sending
+            showToast(`Bulk SMS queued for ${recipients.length} recipients!`);
+            
+            // Clear form
+            document.getElementById('bulkRecipients').value = '';
+            document.getElementById('bulkMessage').value = '';
+            document.getElementById('bulkCampaign').value = '';
+            document.getElementById('recipientCount').textContent = '0 recipients';
+            document.getElementById('bulkCharCount').textContent = '0';
+        }
+
+        // Show toast notification
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            toastMessage.textContent = message;
+            
+            if (type === 'error') {
+                toast.classList.remove('bg-green-500');
+                toast.classList.add('bg-red-500');
+            } else {
+                toast.classList.remove('bg-red-500');
+                toast.classList.add('bg-green-500');
+            }
+            
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        // Message character counter
+        document.getElementById('sendMessage')?.addEventListener('input', function() {
+            document.getElementById('charCount').textContent = this.value.length;
+        });
+
+        document.getElementById('bulkMessage')?.addEventListener('input', function() {
+            document.getElementById('bulkCharCount').textContent = this.value.length;
+        });
+
+        document.getElementById('bulkRecipients')?.addEventListener('input', function() {
+            const count = this.value.split('\n').filter(r => r.trim()).length;
+            document.getElementById('recipientCount').textContent = `${count} recipients`;
+        });
+
+        // Handle Enter key in login
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && document.getElementById('loginModal').classList.contains('hidden') === false) {
+                handleLogin();
+            }
+        });
+    </script>
+</body>
+</html>
