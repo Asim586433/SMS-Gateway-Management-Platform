@@ -6,487 +6,726 @@
     <title>SMS Gateway Management Platform</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        
         * {
-            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
         
-        .sidebar-active {
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background-color: #f9fafb;
+            overflow-x: hidden;
+        }
+        
+        /* Sidebar styles */
+        .sidebar {
+            width: 260px;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            background: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+            z-index: 50;
+        }
+        
+        .main-content {
+            margin-left: 260px;
+            min-height: 100vh;
+            padding: 24px 32px;
+        }
+        
+        /* Navigation items */
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            margin: 4px 12px;
+            color: #4b5563;
+            border-radius: 10px;
+            transition: all 0.2s;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        
+        .nav-item i {
+            width: 24px;
+            margin-right: 12px;
+            font-size: 1.1rem;
+        }
+        
+        .nav-item:hover {
+            background-color: #eff6ff;
+            color: #2563eb;
+        }
+        
+        .nav-item.active {
             background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
             color: white;
         }
         
-        .status-online {
-            @apply bg-green-100 text-green-800;
+        /* Cards */
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
         }
         
-        .status-offline {
-            @apply bg-red-100 text-red-800;
-        }
-        
-        .status-standby {
-            @apply bg-yellow-100 text-yellow-800;
-        }
-        
-        .message-sent {
-            @apply bg-green-100 text-green-800;
-        }
-        
-        .message-pending {
-            @apply bg-yellow-100 text-yellow-800;
-        }
-        
-        .message-failed {
-            @apply bg-red-100 text-red-800;
-        }
-        
-        .transition-all {
-            transition: all 0.3s ease;
-        }
-        
-        .hover-lift:hover {
+        .stat-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+        }
+        
+        /* Status badges */
+        .badge {
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+        
+        .badge-success {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+        
+        .badge-warning {
+            background-color: #fef9c3;
+            color: #854d0e;
+        }
+        
+        .badge-danger {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .badge-info {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+        
+        /* Tables */
+        .table-container {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            text-align: left;
+            padding: 16px 20px;
+            background-color: #f8fafc;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #64748b;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        td {
+            padding: 16px 20px;
+            border-bottom: 1px solid #f1f5f9;
+            color: #334155;
+        }
+        
+        tr:hover td {
+            background-color: #f8fafc;
+        }
+        
+        /* Forms */
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            transition: border-color 0.2s;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+        }
+        
+        .form-label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #334155;
+            margin-bottom: 6px;
+        }
+        
+        /* Buttons */
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: #334155;
+            padding: 12px 24px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-secondary:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+        }
+        
+        /* Charts */
+        .chart-container {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            height: 350px;
+            position: relative;
+        }
+        
+        /* Toast */
+        #toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #10b981;
+            color: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+        
+        #toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        #toast.error {
+            background: #ef4444;
+        }
+        
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 32px;
+            width: 400px;
+            max-width: 90%;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+        }
+        
+        /* Hide/Show */
+        .hidden {
+            display: none !important;
+        }
+        
+        /* Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+        
+        @media (max-width: 1024px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        /* Gateway cards grid */
+        .gateways-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                margin-left: 0;
+                padding: 16px;
+            }
+            .sidebar {
+                transform: translateX(-100%);
+            }
         }
     </style>
 </head>
-<body class="bg-gray-50">
+<body>
     <!-- Login Modal -->
-    <div id="loginModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-lg shadow-xl w-96 p-6">
-            <div class="text-center mb-6">
-                <i class="fas fa-sms text-4xl text-blue-600 mb-2"></i>
-                <h2 class="text-2xl font-bold text-gray-800">SMS Gateway</h2>
-                <p class="text-gray-600">Sign in to your account</p>
+    <div id="loginModal" class="modal-overlay">
+        <div class="modal-content">
+            <div style="text-align: center; margin-bottom: 24px;">
+                <i class="fas fa-sms" style="font-size: 48px; color: #3b82f6;"></i>
+                <h2 style="font-size: 24px; font-weight: bold; margin: 16px 0 8px;">SMS Gateway</h2>
+                <p style="color: #64748b;">Sign in to your account</p>
             </div>
             
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                    <input type="email" id="loginEmail" value="admin@example.com" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                    <input type="password" id="loginPassword" value="admin123" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-                <button onclick="handleLogin()" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                    Sign In
-                </button>
+            <div style="margin-bottom: 20px;">
+                <label class="form-label">Email</label>
+                <input type="email" id="loginEmail" value="admin@example.com" class="form-input">
             </div>
             
-            <div class="mt-4 text-center text-sm text-gray-600">
-                Demo Credentials: admin@example.com / admin123
+            <div style="margin-bottom: 24px;">
+                <label class="form-label">Password</label>
+                <input type="password" id="loginPassword" value="admin123" class="form-input">
             </div>
+            
+            <button onclick="handleLogin()" class="btn-primary" style="width: 100%;">
+                Sign In
+            </button>
+            
+            <p style="text-align: center; margin-top: 20px; color: #64748b; font-size: 14px;">
+                Demo: admin@example.com / admin123
+            </p>
         </div>
     </div>
 
     <!-- Main App -->
     <div id="mainApp" class="hidden">
         <!-- Sidebar -->
-        <div class="fixed inset-y-0 left-0 w-64 bg-white shadow-lg">
-            <div class="flex items-center justify-center h-16 border-b">
-                <i class="fas fa-sms text-2xl text-blue-600 mr-2"></i>
-                <span class="text-xl font-bold text-gray-800">SMS Gateway</span>
+        <div class="sidebar">
+            <div style="padding: 24px; border-bottom: 1px solid #f1f5f9;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <i class="fas fa-sms" style="font-size: 28px; color: #3b82f6;"></i>
+                    <span style="font-size: 20px; font-weight: bold; color: #0f172a;">SMS Gateway</span>
+                </div>
             </div>
             
-            <nav class="mt-6">
-                <div class="px-4 space-y-2">
-                    <a href="#" onclick="showPage('dashboard')" class="sidebar-item flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-blue-50 transition-colors" id="nav-dashboard">
-                        <i class="fas fa-tachometer-alt w-5 h-5 mr-3"></i>
-                        <span>Dashboard</span>
-                    </a>
-                    <a href="#" onclick="showPage('gateways')" class="sidebar-item flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-blue-50 transition-colors" id="nav-gateways">
-                        <i class="fas fa-network-wired w-5 h-5 mr-3"></i>
-                        <span>Gateways</span>
-                    </a>
-                    <a href="#" onclick="showPage('sims')" class="sidebar-item flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-blue-50 transition-colors" id="nav-sims">
-                        <i class="fas fa-sim-card w-5 h-5 mr-3"></i>
-                        <span>SIM Cards</span>
-                    </a>
-                    <a href="#" onclick="showPage('send')" class="sidebar-item flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-blue-50 transition-colors" id="nav-send">
-                        <i class="fas fa-paper-plane w-5 h-5 mr-3"></i>
-                        <span>Send SMS</span>
-                    </a>
-                    <a href="#" onclick="showPage('bulk')" class="sidebar-item flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-blue-50 transition-colors" id="nav-bulk">
-                        <i class="fas fa-envelopes-bulk w-5 h-5 mr-3"></i>
-                        <span>Bulk SMS</span>
-                    </a>
-                    <a href="#" onclick="showPage('inbox')" class="sidebar-item flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-blue-50 transition-colors" id="nav-inbox">
-                        <i class="fas fa-inbox w-5 h-5 mr-3"></i>
-                        <span>Inbox</span>
-                    </a>
-                    <a href="#" onclick="showPage('campaigns')" class="sidebar-item flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-blue-50 transition-colors" id="nav-campaigns">
-                        <i class="fas fa-bullhorn w-5 h-5 mr-3"></i>
-                        <span>Campaigns</span>
-                    </a>
-                    <a href="#" onclick="showPage('analytics')" class="sidebar-item flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-blue-50 transition-colors" id="nav-analytics">
-                        <i class="fas fa-chart-bar w-5 h-5 mr-3"></i>
-                        <span>Analytics</span>
-                    </a>
+            <nav style="padding: 20px 0;">
+                <div onclick="showPage('dashboard')" class="nav-item active" id="nav-dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
                 </div>
-                
-                <div class="absolute bottom-0 w-64 p-4 border-t">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
-                            <span class="text-white font-semibold">AD</span>
-                        </div>
-                        <div class="flex-1">
-                            <p class="text-sm font-semibold text-gray-800">Admin User</p>
-                            <p class="text-xs text-gray-600">admin@example.com</p>
-                        </div>
-                        <button onclick="handleLogout()" class="text-gray-400 hover:text-gray-600">
-                            <i class="fas fa-sign-out-alt"></i>
-                        </button>
-                    </div>
+                <div onclick="showPage('gateways')" class="nav-item" id="nav-gateways">
+                    <i class="fas fa-network-wired"></i>
+                    <span>Gateways</span>
+                </div>
+                <div onclick="showPage('sims')" class="nav-item" id="nav-sims">
+                    <i class="fas fa-sim-card"></i>
+                    <span>SIM Cards</span>
+                </div>
+                <div onclick="showPage('send')" class="nav-item" id="nav-send">
+                    <i class="fas fa-paper-plane"></i>
+                    <span>Send SMS</span>
+                </div>
+                <div onclick="showPage('bulk')" class="nav-item" id="nav-bulk">
+                    <i class="fas fa-envelopes-bulk"></i>
+                    <span>Bulk SMS</span>
+                </div>
+                <div onclick="showPage('inbox')" class="nav-item" id="nav-inbox">
+                    <i class="fas fa-inbox"></i>
+                    <span>Inbox</span>
+                </div>
+                <div onclick="showPage('campaigns')" class="nav-item" id="nav-campaigns">
+                    <i class="fas fa-bullhorn"></i>
+                    <span>Campaigns</span>
+                </div>
+                <div onclick="showPage('analytics')" class="nav-item" id="nav-analytics">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Analytics</span>
                 </div>
             </nav>
+            
+            <div style="position: absolute; bottom: 0; width: 100%; padding: 24px; border-top: 1px solid #f1f5f9;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="width: 44px; height: 44px; background: #3b82f6; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
+                        AD
+                    </div>
+                    <div style="flex: 1;">
+                        <p style="font-weight: 600; color: #0f172a;">Admin User</p>
+                        <p style="font-size: 12px; color: #64748b;">admin@example.com</p>
+                    </div>
+                    <button onclick="handleLogout()" style="background: none; border: none; color: #94a3b8; cursor: pointer;">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
         </div>
 
         <!-- Main Content -->
-        <div class="ml-64 p-8">
+        <div class="main-content">
             <!-- Top Bar -->
-            <div class="flex justify-between items-center mb-8">
-                <h1 class="text-2xl font-bold text-gray-800" id="pageTitle">Dashboard</h1>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px;">
+                <h1 id="pageTitle" style="font-size: 28px; font-weight: bold; color: #0f172a;">Dashboard</h1>
                 
-                <div class="flex items-center space-x-4">
-                    <div class="relative">
-                        <i class="fas fa-bell text-gray-500 text-xl"></li>
-                        <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">3</span>
+                <div style="display: flex; align-items: center; gap: 20px;">
+                    <div style="position: relative;">
+                        <i class="fas fa-bell" style="font-size: 20px; color: #64748b;"></i>
+                        <span style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; font-size: 11px; width: 18px; height: 18px; border-radius: 9px; display: flex; align-items: center; justify-content: center;">3</span>
                     </div>
-                    <div class="flex items-center space-x-2 bg-white px-4 py-2 rounded-lg shadow-sm">
-                        <i class="fas fa-clock text-gray-400"></i>
-                        <span class="text-sm text-gray-600" id="currentDateTime"></span>
+                    <div style="display: flex; align-items: center; gap: 8px; background: white; padding: 8px 16px; border-radius: 40px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                        <i class="fas fa-clock" style="color: #94a3b8;"></i>
+                        <span id="currentDateTime" style="color: #334155;"></span>
                     </div>
                 </div>
             </div>
 
             <!-- Dashboard Page -->
-            <div id="page-dashboard" class="page">
+            <div id="page-dashboard">
                 <!-- Stats Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <div class="bg-white rounded-lg shadow p-6 hover-lift transition-all">
-                        <div class="flex items-center justify-between">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div style="display: flex; justify-content: space-between;">
                             <div>
-                                <p class="text-sm text-gray-600">Total Gateways</p>
-                                <p class="text-2xl font-bold text-gray-800" id="totalGateways">3</p>
+                                <p style="color: #64748b; font-size: 14px;">Total Gateways</p>
+                                <p style="font-size: 32px; font-weight: bold; color: #0f172a;" id="totalGateways">3</p>
                             </div>
-                            <div class="bg-blue-100 p-3 rounded-lg">
-                                <i class="fas fa-network-wired text-blue-600 text-xl"></i>
+                            <div style="background: #dbeafe; padding: 16px; border-radius: 16px;">
+                                <i class="fas fa-network-wired" style="color: #3b82f6; font-size: 24px;"></i>
                             </div>
                         </div>
-                        <div class="mt-4 text-sm text-green-600">
-                            <i class="fas fa-arrow-up mr-1"></i>2 online
-                        </div>
+                        <p style="margin-top: 12px; color: #10b981; font-size: 14px;">
+                            <i class="fas fa-arrow-up" style="margin-right: 4px;"></i>2 online
+                        </p>
                     </div>
                     
-                    <div class="bg-white rounded-lg shadow p-6 hover-lift transition-all">
-                        <div class="flex items-center justify-between">
+                    <div class="stat-card">
+                        <div style="display: flex; justify-content: space-between;">
                             <div>
-                                <p class="text-sm text-gray-600">Active SIMs</p>
-                                <p class="text-2xl font-bold text-gray-800" id="activeSims">24</p>
+                                <p style="color: #64748b; font-size: 14px;">Active SIMs</p>
+                                <p style="font-size: 32px; font-weight: bold; color: #0f172a;" id="activeSims">24</p>
                             </div>
-                            <div class="bg-green-100 p-3 rounded-lg">
-                                <i class="fas fa-sim-card text-green-600 text-xl"></i>
+                            <div style="background: #dcfce7; padding: 16px; border-radius: 16px;">
+                                <i class="fas fa-sim-card" style="color: #10b981; font-size: 24px;"></i>
                             </div>
                         </div>
-                        <div class="mt-4 text-sm text-gray-600">
-                            <i class="fas fa-circle text-green-500 mr-1 text-xs"></i>24 active
-                        </div>
+                        <p style="margin-top: 12px; color: #64748b; font-size: 14px;">
+                            <i class="fas fa-circle" style="color: #10b981; font-size: 8px; margin-right: 4px;"></i>24 active
+                        </p>
                     </div>
                     
-                    <div class="bg-white rounded-lg shadow p-6 hover-lift transition-all">
-                        <div class="flex items-center justify-between">
+                    <div class="stat-card">
+                        <div style="display: flex; justify-content: space-between;">
                             <div>
-                                <p class="text-sm text-gray-600">Sent Today</p>
-                                <p class="text-2xl font-bold text-gray-800" id="sentToday">3,452</p>
+                                <p style="color: #64748b; font-size: 14px;">Sent Today</p>
+                                <p style="font-size: 32px; font-weight: bold; color: #0f172a;" id="sentToday">3,452</p>
                             </div>
-                            <div class="bg-purple-100 p-3 rounded-lg">
-                                <i class="fas fa-paper-plane text-purple-600 text-xl"></i>
+                            <div style="background: #f3e8ff; padding: 16px; border-radius: 16px;">
+                                <i class="fas fa-paper-plane" style="color: #a855f7; font-size: 24px;"></i>
                             </div>
                         </div>
-                        <div class="mt-4 text-sm text-green-600">
-                            <i class="fas fa-arrow-up mr-1"></i>12% increase
-                        </div>
+                        <p style="margin-top: 12px; color: #10b981; font-size: 14px;">
+                            <i class="fas fa-arrow-up"></i> 12% increase
+                        </p>
                     </div>
                     
-                    <div class="bg-white rounded-lg shadow p-6 hover-lift transition-all">
-                        <div class="flex items-center justify-between">
+                    <div class="stat-card">
+                        <div style="display: flex; justify-content: space-between;">
                             <div>
-                                <p class="text-sm text-gray-600">Inbound Today</p>
-                                <p class="text-2xl font-bold text-gray-800" id="inboundToday">98</p>
+                                <p style="color: #64748b; font-size: 14px;">Inbound Today</p>
+                                <p style="font-size: 32px; font-weight: bold; color: #0f172a;" id="inboundToday">98</p>
                             </div>
-                            <div class="bg-orange-100 p-3 rounded-lg">
-                                <i class="fas fa-inbox text-orange-600 text-xl"></i>
+                            <div style="background: #ffe4e6; padding: 16px; border-radius: 16px;">
+                                <i class="fas fa-inbox" style="color: #ef4444; font-size: 24px;"></i>
                             </div>
                         </div>
-                        <div class="mt-4 text-sm text-red-600">
-                            <i class="fas fa-arrow-down mr-1"></i>5% decrease
-                        </div>
+                        <p style="margin-top: 12px; color: #ef4444; font-size: 14px;">
+                            <i class="fas fa-arrow-down"></i> 5% decrease
+                        </p>
                     </div>
                 </div>
 
                 <!-- Charts Row -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                    <div class="bg-white rounded-lg shadow p-6">
-                        <h3 class="text-lg font-semibold mb-4">SMS Volume (Last 7 Days)</h3>
-                        <canvas id="smsChart" height="200"></canvas>
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 32px;">
+                    <div class="chart-container">
+                        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 20px;">SMS Volume (Last 7 Days)</h3>
+                        <div style="height: 250px;">
+                            <canvas id="smsChart"></canvas>
+                        </div>
                     </div>
                     
-                    <div class="bg-white rounded-lg shadow p-6">
-                        <h3 class="text-lg font-semibold mb-4">Gateway Health</h3>
-                        <div class="space-y-4" id="gatewayHealth">
-                            <!-- Populated by JavaScript -->
-                        </div>
+                    <div class="chart-container">
+                        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 20px;">Gateway Health</h3>
+                        <div id="gatewayHealth" style="height: 250px; overflow-y: auto;"></div>
                     </div>
                 </div>
 
                 <!-- Recent Messages -->
-                <div class="bg-white rounded-lg shadow">
-                    <div class="px-6 py-4 border-b flex justify-between items-center">
-                        <h3 class="text-lg font-semibold">Recent Messages</h3>
-                        <button class="text-blue-600 text-sm hover:text-blue-800">View All</button>
+                <div class="table-container">
+                    <div style="padding: 20px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between;">
+                        <h3 style="font-size: 18px; font-weight: 600;">Recent Messages</h3>
+                        <button style="color: #3b82f6; background: none; border: none; cursor: pointer;">View All</button>
                     </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full">
-                            <thead class="bg-gray-50">
+                    <div style="overflow-x: auto;">
+                        <table>
+                            <thead>
                                 <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Direction</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">From/To</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Message</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Time</th>
+                                    <th>Direction</th>
+                                    <th>From/To</th>
+                                    <th>Message</th>
+                                    <th>Status</th>
+                                    <th>Time</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-200" id="recentMessages">
-                                <!-- Populated by JavaScript -->
-                            </tbody>
+                            <tbody id="recentMessages"></tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
-            <!-- Gateways Page -->
-            <div id="page-gateways" class="page hidden">
-                <div class="mb-6 flex justify-between items-center">
-                    <h2 class="text-xl font-semibold">Gateway Management</h2>
-                    <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                        <i class="fas fa-plus mr-2"></i>Add Gateway
+            <!-- Gateways Page (Hidden by default) -->
+            <div id="page-gateways" class="hidden">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <h2 style="font-size: 20px; font-weight: 600;">Gateway Management</h2>
+                    <button class="btn-primary">
+                        <i class="fas fa-plus" style="margin-right: 8px;"></i>Add Gateway
                     </button>
                 </div>
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="gatewayList">
-                    <!-- Populated by JavaScript -->
-                </div>
+                <div class="gateways-grid" id="gatewayList"></div>
             </div>
 
             <!-- SIMs Page -->
-            <div id="page-sims" class="page hidden">
-                <div class="mb-6 flex justify-between items-center">
-                    <h2 class="text-xl font-semibold">SIM Card Management</h2>
-                    <div class="space-x-2">
-                        <button class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
-                            <i class="fas fa-sync-alt mr-2"></i>Update Limits
+            <div id="page-sims" class="hidden">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <h2 style="font-size: 20px; font-weight: 600;">SIM Card Management</h2>
+                    <div style="display: flex; gap: 12px;">
+                        <button class="btn-secondary">
+                            <i class="fas fa-sync-alt" style="margin-right: 8px;"></i>Update Limits
                         </button>
-                        <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                            <i class="fas fa-plus mr-2"></i>Add SIM
+                        <button class="btn-primary">
+                            <i class="fas fa-plus" style="margin-right: 8px;"></i>Add SIM
                         </button>
                     </div>
                 </div>
                 
-                <div class="bg-white rounded-lg shadow overflow-hidden">
-                    <table class="w-full">
-                        <thead class="bg-gray-50">
+                <div class="table-container">
+                    <table>
+                        <thead>
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone Number</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Gateway</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Port</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sent Today</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Daily Limit</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                <th>Phone Number</th>
+                                <th>Gateway</th>
+                                <th>Port</th>
+                                <th>Status</th>
+                                <th>Sent Today</th>
+                                <th>Daily Limit</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200" id="simList">
-                            <!-- Populated by JavaScript -->
-                        </tbody>
+                        <tbody id="simList"></tbody>
                     </table>
                 </div>
             </div>
 
             <!-- Send SMS Page -->
-            <div id="page-send" class="page hidden">
-                <div class="max-w-2xl">
-                    <div class="bg-white rounded-lg shadow p-6">
-                        <h3 class="text-lg font-semibold mb-4">Send Single SMS</h3>
+            <div id="page-send" class="hidden">
+                <div style="max-width: 600px;">
+                    <div class="table-container" style="padding: 32px;">
+                        <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 24px;">Send Single SMS</h3>
                         
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-                                <input type="text" id="sendPhone" placeholder="+447700900222" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Message</label>
-                                <textarea id="sendMessage" rows="4" placeholder="Type your message here..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
-                                <div class="text-right text-sm text-gray-500 mt-1">
-                                    <span id="charCount">0</span>/1600
-                                </div>
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Campaign (Optional)</label>
-                                <input type="text" id="sendCampaign" placeholder="e.g., Marketing Campaign" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            </div>
-                            
-                            <button onclick="sendSingleSMS()" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                                <i class="fas fa-paper-plane mr-2"></i>Send SMS
-                            </button>
+                        <div style="margin-bottom: 20px;">
+                            <label class="form-label">Phone Number</label>
+                            <input type="text" id="sendPhone" placeholder="+447700900222" class="form-input">
                         </div>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <label class="form-label">Message</label>
+                            <textarea id="sendMessage" rows="4" placeholder="Type your message here..." class="form-input"></textarea>
+                            <div style="text-align: right; margin-top: 8px; color: #64748b; font-size: 14px;">
+                                <span id="charCount">0</span>/1600
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 24px;">
+                            <label class="form-label">Campaign (Optional)</label>
+                            <input type="text" id="sendCampaign" placeholder="e.g., Marketing Campaign" class="form-input">
+                        </div>
+                        
+                        <button onclick="sendSingleSMS()" class="btn-primary" style="width: 100%;">
+                            <i class="fas fa-paper-plane" style="margin-right: 8px;"></i>Send SMS
+                        </button>
                     </div>
                     
                     <!-- Quick Stats -->
-                    <div class="grid grid-cols-3 gap-4 mt-6">
-                        <div class="bg-blue-50 rounded-lg p-4">
-                            <p class="text-sm text-blue-600">Available SIMs</p>
-                            <p class="text-2xl font-bold text-blue-900">18</p>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 24px;">
+                        <div style="background: #eff6ff; padding: 20px; border-radius: 16px;">
+                            <p style="color: #3b82f6; font-size: 14px;">Available SIMs</p>
+                            <p style="font-size: 28px; font-weight: bold; color: #1e40af;">18</p>
                         </div>
-                        <div class="bg-green-50 rounded-lg p-4">
-                            <p class="text-sm text-green-600">Daily Remaining</p>
-                            <p class="text-2xl font-bold text-green-900">3,548</p>
+                        <div style="background: #f0fdf4; padding: 20px; border-radius: 16px;">
+                            <p style="color: #10b981; font-size: 14px;">Daily Remaining</p>
+                            <p style="font-size: 28px; font-weight: bold; color: #166534;">3,548</p>
                         </div>
-                        <div class="bg-purple-50 rounded-lg p-4">
-                            <p class="text-sm text-purple-600">Cost Estimate</p>
-                            <p class="text-2xl font-bold text-purple-900">$0.04</p>
+                        <div style="background: #faf5ff; padding: 20px; border-radius: 16px;">
+                            <p style="color: #a855f7; font-size: 14px;">Cost Estimate</p>
+                            <p style="font-size: 28px; font-weight: bold; color: #6b21a5;">$0.04</p>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Bulk SMS Page -->
-            <div id="page-bulk" class="page hidden">
-                <div class="max-w-2xl">
-                    <div class="bg-white rounded-lg shadow p-6">
-                        <h3 class="text-lg font-semibold mb-4">Send Bulk SMS</h3>
+            <div id="page-bulk" class="hidden">
+                <div style="max-width: 600px;">
+                    <div class="table-container" style="padding: 32px;">
+                        <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 24px;">Send Bulk SMS</h3>
                         
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Recipients</label>
-                                <textarea id="bulkRecipients" rows="4" placeholder="Enter phone numbers (one per line)&#10;+447700900301&#10;+447700900302&#10;+447700900303" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
-                                <div class="text-right text-sm text-gray-500 mt-1" id="recipientCount">0 recipients</div>
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Message</label>
-                                <textarea id="bulkMessage" rows="4" placeholder="Type your message here..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
-                                <div class="text-right text-sm text-gray-500 mt-1">
-                                    <span id="bulkCharCount">0</span>/1600
-                                </div>
-                            </div>
-                            
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Campaign Name</label>
-                                <input type="text" id="bulkCampaign" placeholder="e.g., Promo-April" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            </div>
-                            
-                            <button onclick="sendBulkSMS()" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                                <i class="fas fa-envelopes-bulk mr-2"></i>Send Bulk SMS
-                            </button>
+                        <div style="margin-bottom: 20px;">
+                            <label class="form-label">Recipients</label>
+                            <textarea id="bulkRecipients" rows="4" placeholder="Enter phone numbers (one per line)&#10;+447700900301&#10;+447700900302&#10;+447700900303" class="form-input"></textarea>
+                            <div style="text-align: right; margin-top: 8px; color: #64748b; font-size: 14px;" id="recipientCount">0 recipients</div>
                         </div>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <label class="form-label">Message</label>
+                            <textarea id="bulkMessage" rows="4" placeholder="Type your message here..." class="form-input"></textarea>
+                            <div style="text-align: right; margin-top: 8px; color: #64748b; font-size: 14px;">
+                                <span id="bulkCharCount">0</span>/1600
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 24px;">
+                            <label class="form-label">Campaign Name</label>
+                            <input type="text" id="bulkCampaign" placeholder="e.g., Promo-April" class="form-input">
+                        </div>
+                        
+                        <button onclick="sendBulkSMS()" class="btn-primary" style="width: 100%;">
+                            <i class="fas fa-envelopes-bulk" style="margin-right: 8px;"></i>Send Bulk SMS
+                        </button>
                     </div>
                 </div>
             </div>
 
             <!-- Inbox Page -->
-            <div id="page-inbox" class="page hidden">
-                <div class="mb-6 flex justify-between items-center">
-                    <h2 class="text-xl font-semibold">Inbox</h2>
-                    <div class="flex space-x-2">
-                        <input type="text" placeholder="Search messages..." class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <button class="bg-gray-100 px-4 py-2 rounded-lg hover:bg-gray-200">
+            <div id="page-inbox" class="hidden">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <h2 style="font-size: 20px; font-weight: 600;">Inbox</h2>
+                    <div style="display: flex; gap: 12px;">
+                        <input type="text" placeholder="Search messages..." class="form-input" style="width: 300px;">
+                        <button class="btn-secondary">
                             <i class="fas fa-filter"></i>
                         </button>
                     </div>
                 </div>
                 
-                <div class="bg-white rounded-lg shadow overflow-hidden">
-                    <table class="w-full">
-                        <thead class="bg-gray-50">
+                <div class="table-container">
+                    <table>
+                        <thead>
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">From</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">To</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Message</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Received</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                <th>From</th>
+                                <th>To</th>
+                                <th>Message</th>
+                                <th>Received</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200" id="inboxMessages">
-                            <!-- Populated by JavaScript -->
-                        </tbody>
+                        <tbody id="inboxMessages"></tbody>
                     </table>
                 </div>
             </div>
 
             <!-- Campaigns Page -->
-            <div id="page-campaigns" class="page hidden">
-                <div class="mb-6 flex justify-between items-center">
-                    <h2 class="text-xl font-semibold">SMS Campaigns</h2>
-                    <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                        <i class="fas fa-plus mr-2"></i>New Campaign
+            <div id="page-campaigns" class="hidden">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <h2 style="font-size: 20px; font-weight: 600;">SMS Campaigns</h2>
+                    <button class="btn-primary">
+                        <i class="fas fa-plus" style="margin-right: 8px;"></i>New Campaign
                     </button>
                 </div>
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="campaignList">
-                    <!-- Populated by JavaScript -->
-                </div>
+                <div class="gateways-grid" id="campaignList"></div>
             </div>
 
             <!-- Analytics Page -->
-            <div id="page-analytics" class="page hidden">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                    <div class="bg-white rounded-lg shadow p-6">
-                        <h3 class="text-lg font-semibold mb-4">SMS Volume by Gateway</h3>
-                        <canvas id="gatewayChart" height="200"></canvas>
+            <div id="page-analytics" class="hidden">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px;">
+                    <div class="chart-container">
+                        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 20px;">SMS Volume by Gateway</h3>
+                        <div style="height: 250px;">
+                            <canvas id="gatewayChart"></canvas>
+                        </div>
                     </div>
                     
-                    <div class="bg-white rounded-lg shadow p-6">
-                        <h3 class="text-lg font-semibold mb-4">Delivery Status</h3>
-                        <canvas id="deliveryChart" height="200"></canvas>
+                    <div class="chart-container">
+                        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 20px;">Delivery Status</h3>
+                        <div style="height: 250px;">
+                            <canvas id="deliveryChart"></canvas>
+                        </div>
                     </div>
                 </div>
                 
-                <div class="bg-white rounded-lg shadow p-6">
-                    <h3 class="text-lg font-semibold mb-4">Campaign Performance</h3>
-                    <div class="overflow-x-auto">
-                        <table class="w-full">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Campaign</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sent</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Delivered</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Failed</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rate</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-200" id="campaignPerformance">
-                                <!-- Populated by JavaScript -->
-                            </tbody>
-                        </table>
+                <div class="table-container">
+                    <div style="padding: 20px; border-bottom: 1px solid #f1f5f9;">
+                        <h3 style="font-size: 18px; font-weight: 600;">Campaign Performance</h3>
                     </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Campaign</th>
+                                <th>Sent</th>
+                                <th>Delivered</th>
+                                <th>Failed</th>
+                                <th>Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody id="campaignPerformance"></tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Toast Notification -->
-    <div id="toast" class="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg transform transition-transform translate-y-20 opacity-0">
-        <i class="fas fa-check-circle mr-2"></i>
-        <span id="toastMessage">Message sent successfully!</span>
+    <div id="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastMessage"></span>
     </div>
 
     <script>
+        // Store chart instances to prevent duplication
+        let chartInstances = {
+            smsChart: null,
+            gatewayChart: null,
+            deliveryChart: null
+        };
+
         // Sample Data
         const gateways = [
             { id: 1, name: 'Gateway-A', ip: '192.168.1.20', provider: 'GoIP', ports: 16, status: 'online', activeSims: 14 },
@@ -534,8 +773,21 @@
             populateCampaignList();
             populateCampaignPerformance();
             
-            // Initialize charts
-            initCharts();
+            // Initialize charts with a slight delay to ensure DOM is ready
+            setTimeout(() => {
+                destroyCharts();
+                initCharts();
+            }, 100);
+        }
+
+        // Destroy existing charts
+        function destroyCharts() {
+            Object.keys(chartInstances).forEach(key => {
+                if (chartInstances[key]) {
+                    chartInstances[key].destroy();
+                    chartInstances[key] = null;
+                }
+            });
         }
 
         // Handle Login
@@ -559,26 +811,38 @@
             currentUser = null;
             document.getElementById('mainApp').classList.add('hidden');
             document.getElementById('loginModal').classList.remove('hidden');
+            destroyCharts();
         }
 
         // Show different pages
         function showPage(page) {
             // Hide all pages
-            document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+            document.querySelectorAll('[id^="page-"]').forEach(p => p.classList.add('hidden'));
             
             // Show selected page
             document.getElementById(`page-${page}`).classList.remove('hidden');
             
             // Update page title
-            document.getElementById('pageTitle').textContent = page.charAt(0).toUpperCase() + page.slice(1);
+            const titles = {
+                dashboard: 'Dashboard',
+                gateways: 'Gateways',
+                sims: 'SIM Cards',
+                send: 'Send SMS',
+                bulk: 'Bulk SMS',
+                inbox: 'Inbox',
+                campaigns: 'Campaigns',
+                analytics: 'Analytics'
+            };
+            document.getElementById('pageTitle').textContent = titles[page] || page;
             
             // Update active nav
-            document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('sidebar-active'));
-            document.getElementById(`nav-${page}`).classList.add('sidebar-active');
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            document.getElementById(`nav-${page}`).classList.add('active');
             
-            // Refresh charts if on analytics page
+            // Reinitialize charts if on analytics page
             if (page === 'analytics') {
                 setTimeout(() => {
+                    destroyCharts();
                     initCharts();
                 }, 100);
             }
@@ -587,22 +851,32 @@
         // Update date/time
         function updateDateTime() {
             const now = new Date();
-            document.getElementById('currentDateTime').textContent = now.toLocaleString();
+            const options = { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric', 
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit'
+            };
+            document.getElementById('currentDateTime').textContent = now.toLocaleString('en-US', options);
         }
 
         // Populate gateway health
         function populateGatewayHealth() {
             const container = document.getElementById('gatewayHealth');
+            if (!container) return;
+            
             container.innerHTML = gateways.map(g => `
-                <div class="flex items-center justify-between p-3 border rounded-lg">
-                    <div class="flex items-center space-x-3">
-                        <i class="fas fa-${g.status === 'online' ? 'check-circle text-green-500' : 'exclamation-circle text-red-500'}"></i>
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; border-bottom: 1px solid #f1f5f9;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <i class="fas fa-${g.status === 'online' ? 'check-circle' : 'exclamation-circle'}" style="color: ${g.status === 'online' ? '#10b981' : '#ef4444'};"></i>
                         <div>
-                            <p class="font-medium">${g.name}</p>
-                            <p class="text-sm text-gray-500">${g.activeSims} active SIMs</p>
+                            <p style="font-weight: 500;">${g.name}</p>
+                            <p style="font-size: 13px; color: #64748b;">${g.activeSims} active SIMs</p>
                         </div>
                     </div>
-                    <span class="px-2 py-1 text-xs rounded-full ${g.status === 'online' ? 'status-online' : 'status-offline'}">
+                    <span class="badge ${g.status === 'online' ? 'badge-success' : 'badge-danger'}">
                         ${g.status}
                     </span>
                 </div>
@@ -612,47 +886,53 @@
         // Populate recent messages
         function populateRecentMessages() {
             const tbody = document.getElementById('recentMessages');
-            tbody.innerHTML = messages.slice(0, 5).map(m => `
-                <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4">
-                        <span class="px-2 py-1 text-xs rounded-full ${m.direction === 'inbound' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}">
+            if (!tbody) return;
+            
+            tbody.innerHTML = messages.slice(0, 5).map(m => {
+                let statusClass = '';
+                if (m.status === 'sent' || m.status === 'received' || m.status === 'delivered') statusClass = 'badge-success';
+                else if (m.status === 'failed') statusClass = 'badge-danger';
+                else statusClass = 'badge-warning';
+                
+                return `
+                <tr>
+                    <td>
+                        <span class="badge ${m.direction === 'inbound' ? 'badge-info' : 'badge-success'}">
                             ${m.direction}
                         </span>
                     </td>
-                    <td class="px-6 py-4">${m.direction === 'inbound' ? m.from : m.to}</td>
-                    <td class="px-6 py-4 max-w-xs truncate">${m.message}</td>
-                    <td class="px-6 py-4">
-                        <span class="px-2 py-1 text-xs rounded-full ${m.status === 'sent' || m.status === 'received' ? 'bg-green-100 text-green-800' : m.status === 'failed' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}">
-                            ${m.status}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 text-sm text-gray-500">${new Date(m.time).toLocaleTimeString()}</td>
+                    <td>${m.direction === 'inbound' ? m.from : m.to}</td>
+                    <td style="max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${m.message}</td>
+                    <td><span class="badge ${statusClass}">${m.status}</span></td>
+                    <td>${new Date(m.time).toLocaleTimeString()}</td>
                 </tr>
-            `).join('');
+            `}).join('');
         }
 
         // Populate gateway list
         function populateGatewayList() {
             const container = document.getElementById('gatewayList');
+            if (!container) return;
+            
             container.innerHTML = gateways.map(g => `
-                <div class="bg-white rounded-lg shadow p-6 hover-lift transition-all">
-                    <div class="flex justify-between items-start mb-4">
+                <div class="stat-card">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px;">
                         <div>
-                            <h3 class="text-lg font-semibold">${g.name}</h3>
-                            <p class="text-sm text-gray-500">${g.provider}</p>
+                            <h3 style="font-size: 18px; font-weight: 600;">${g.name}</h3>
+                            <p style="color: #64748b; font-size: 14px;">${g.provider}</p>
                         </div>
-                        <span class="px-2 py-1 text-xs rounded-full ${g.status === 'online' ? 'status-online' : 'status-offline'}">
+                        <span class="badge ${g.status === 'online' ? 'badge-success' : 'badge-danger'}">
                             ${g.status}
                         </span>
                     </div>
-                    <div class="space-y-2 text-sm">
-                        <p><i class="fas fa-ip mr-2 text-gray-400"></i> ${g.ip}</p>
-                        <p><i class="fas fa-plug mr-2 text-gray-400"></i> ${g.ports} ports</p>
-                        <p><i class="fas fa-sim-card mr-2 text-gray-400"></i> ${g.activeSims} active SIMs</p>
+                    <div style="margin-bottom: 20px;">
+                        <p style="margin-bottom: 8px;"><i class="fas fa-ip" style="width: 20px; color: #94a3b8;"></i> ${g.ip}</p>
+                        <p style="margin-bottom: 8px;"><i class="fas fa-plug" style="width: 20px; color: #94a3b8;"></i> ${g.ports} ports</p>
+                        <p><i class="fas fa-sim-card" style="width: 20px; color: #94a3b8;"></i> ${g.activeSims} active SIMs</p>
                     </div>
-                    <div class="mt-4 flex space-x-2">
-                        <button class="flex-1 bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 text-sm">Manage</button>
-                        <button class="px-3 py-1 border rounded hover:bg-gray-50 text-sm">Details</button>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn-primary" style="flex: 1; padding: 8px;">Manage</button>
+                        <button class="btn-secondary" style="flex: 1; padding: 8px;">Details</button>
                     </div>
                 </div>
             `).join('');
@@ -661,38 +941,47 @@
         // Populate SIM list
         function populateSimList() {
             const tbody = document.getElementById('simList');
-            tbody.innerHTML = sims.map(s => `
-                <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4 font-mono">${s.phone}</td>
-                    <td class="px-6 py-4">${s.gateway}</td>
-                    <td class="px-6 py-4">Port ${s.port}</td>
-                    <td class="px-6 py-4">
-                        <span class="px-2 py-1 text-xs rounded-full ${s.status === 'active' ? 'status-online' : 'status-standby'}">
-                            ${s.status}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4">${s.sent}</td>
-                    <td class="px-6 py-4">${s.limit}</td>
-                    <td class="px-6 py-4">
-                        <button class="text-blue-600 hover:text-blue-800 mr-2"><i class="fas fa-edit"></i></button>
-                        <button class="text-red-600 hover:text-red-800"><i class="fas fa-trash"></i></button>
+            if (!tbody) return;
+            
+            tbody.innerHTML = sims.map(s => {
+                let statusClass = s.status === 'active' ? 'badge-success' : 'badge-warning';
+                
+                return `
+                <tr>
+                    <td style="font-family: monospace;">${s.phone}</td>
+                    <td>${s.gateway}</td>
+                    <td>Port ${s.port}</td>
+                    <td><span class="badge ${statusClass}">${s.status}</span></td>
+                    <td>${s.sent}</td>
+                    <td>${s.limit}</td>
+                    <td>
+                        <button style="color: #3b82f6; background: none; border: none; margin-right: 12px; cursor: pointer;">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button style="color: #ef4444; background: none; border: none; cursor: pointer;">
+                            <i class="fas fa-trash"></i>
+                        </button>
                     </td>
                 </tr>
-            `).join('');
+            `}).join('');
         }
 
         // Populate inbox
         function populateInbox() {
             const tbody = document.getElementById('inboxMessages');
+            if (!tbody) return;
+            
             const inboxMessages = messages.filter(m => m.direction === 'inbound');
             tbody.innerHTML = inboxMessages.map(m => `
-                <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4 font-mono">${m.from}</td>
-                    <td class="px-6 py-4 font-mono">${m.to}</td>
-                    <td class="px-6 py-4 max-w-xs">${m.message}</td>
-                    <td class="px-6 py-4 text-sm text-gray-500">${new Date(m.time).toLocaleString()}</td>
-                    <td class="px-6 py-4">
-                        <button class="text-blue-600 hover:text-blue-800"><i class="fas fa-reply"></i></button>
+                <tr>
+                    <td style="font-family: monospace;">${m.from}</td>
+                    <td style="font-family: monospace;">${m.to}</td>
+                    <td style="max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${m.message}</td>
+                    <td>${new Date(m.time).toLocaleString()}</td>
+                    <td>
+                        <button style="color: #3b82f6; background: none; border: none; cursor: pointer;">
+                            <i class="fas fa-reply"></i>
+                        </button>
                     </td>
                 </tr>
             `).join('');
@@ -701,21 +990,21 @@
         // Populate campaign list
         function populateCampaignList() {
             const container = document.getElementById('campaignList');
+            if (!container) return;
+            
             container.innerHTML = campaigns.map(c => `
-                <div class="bg-white rounded-lg shadow p-6 hover-lift transition-all">
-                    <div class="flex justify-between items-start mb-4">
-                        <h3 class="text-lg font-semibold">${c.name}</h3>
-                        <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Active</span>
+                <div class="stat-card">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px;">
+                        <h3 style="font-size: 18px; font-weight: 600;">${c.name}</h3>
+                        <span class="badge badge-success">Active</span>
                     </div>
-                    <div class="space-y-2 text-sm">
-                        <p><i class="fas fa-paper-plane mr-2 text-gray-400"></i> ${c.sent} sent</p>
-                        <p><i class="fas fa-check-circle mr-2 text-gray-400"></i> ${c.delivered} delivered</p>
-                        <p><i class="fas fa-chart-line mr-2 text-gray-400"></i> ${c.rate} success rate</p>
+                    <div style="margin-bottom: 16px;">
+                        <p style="margin-bottom: 8px;"><i class="fas fa-paper-plane" style="width: 20px; color: #94a3b8;"></i> ${c.sent} sent</p>
+                        <p style="margin-bottom: 8px;"><i class="fas fa-check-circle" style="width: 20px; color: #94a3b8;"></i> ${c.delivered} delivered</p>
+                        <p><i class="fas fa-chart-line" style="width: 20px; color: #94a3b8;"></i> ${c.rate} success rate</p>
                     </div>
-                    <div class="mt-4">
-                        <div class="w-full bg-gray-200 rounded-full h-2">
-                            <div class="bg-green-600 h-2 rounded-full" style="width: ${c.rate}"></div>
-                        </div>
+                    <div style="width: 100%; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
+                        <div style="width: ${c.rate}; height: 100%; background: #10b981;"></div>
                     </div>
                 </div>
             `).join('');
@@ -724,17 +1013,15 @@
         // Populate campaign performance table
         function populateCampaignPerformance() {
             const tbody = document.getElementById('campaignPerformance');
+            if (!tbody) return;
+            
             tbody.innerHTML = campaigns.map(c => `
-                <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4 font-medium">${c.name}</td>
-                    <td class="px-6 py-4">${c.sent}</td>
-                    <td class="px-6 py-4">${c.delivered}</td>
-                    <td class="px-6 py-4">${c.failed}</td>
-                    <td class="px-6 py-4">
-                        <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
-                            ${c.rate}
-                        </span>
-                    </td>
+                <tr>
+                    <td style="font-weight: 500;">${c.name}</td>
+                    <td>${c.sent}</td>
+                    <td>${c.delivered}</td>
+                    <td>${c.failed}</td>
+                    <td><span class="badge badge-success">${c.rate}</span></td>
                 </tr>
             `).join('');
         }
@@ -743,8 +1030,8 @@
         function initCharts() {
             // SMS Volume Chart
             const smsCtx = document.getElementById('smsChart')?.getContext('2d');
-            if (smsCtx) {
-                new Chart(smsCtx, {
+            if (smsCtx && !chartInstances.smsChart) {
+                chartInstances.smsChart = new Chart(smsCtx, {
                     type: 'line',
                     data: {
                         labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
@@ -753,26 +1040,34 @@
                             data: [450, 520, 480, 610, 590, 420, 380],
                             borderColor: '#3b82f6',
                             backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                            tension: 0.4
+                            tension: 0.4,
+                            fill: true
                         }, {
                             label: 'Received',
                             data: [120, 140, 110, 160, 150, 90, 80],
                             borderColor: '#10b981',
                             backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                            tension: 0.4
+                            tension: 0.4,
+                            fill: true
                         }]
                     },
                     options: {
                         responsive: true,
-                        maintainAspectRatio: false
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'bottom'
+                            }
+                        }
                     }
                 });
             }
 
             // Gateway Chart
             const gatewayCtx = document.getElementById('gatewayChart')?.getContext('2d');
-            if (gatewayCtx) {
-                new Chart(gatewayCtx, {
+            if (gatewayCtx && !chartInstances.gatewayChart) {
+                chartInstances.gatewayChart = new Chart(gatewayCtx, {
                     type: 'bar',
                     data: {
                         labels: ['Gateway-A', 'Gateway-B', 'Gateway-C'],
@@ -784,15 +1079,20 @@
                     },
                     options: {
                         responsive: true,
-                        maintainAspectRatio: false
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        }
                     }
                 });
             }
 
             // Delivery Chart
             const deliveryCtx = document.getElementById('deliveryChart')?.getContext('2d');
-            if (deliveryCtx) {
-                new Chart(deliveryCtx, {
+            if (deliveryCtx && !chartInstances.deliveryChart) {
+                chartInstances.deliveryChart = new Chart(deliveryCtx, {
                     type: 'doughnut',
                     data: {
                         labels: ['Delivered', 'Failed', 'Pending'],
@@ -803,7 +1103,12 @@
                     },
                     options: {
                         responsive: true,
-                        maintainAspectRatio: false
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
                     }
                 });
             }
@@ -858,39 +1163,41 @@
             const toastMessage = document.getElementById('toastMessage');
             
             toastMessage.textContent = message;
-            
-            if (type === 'error') {
-                toast.classList.remove('bg-green-500');
-                toast.classList.add('bg-red-500');
-            } else {
-                toast.classList.remove('bg-red-500');
-                toast.classList.add('bg-green-500');
-            }
-            
-            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.className = type === 'success' ? 'show' : 'show error';
             
             setTimeout(() => {
-                toast.classList.add('translate-y-20', 'opacity-0');
+                toast.className = '';
             }, 3000);
         }
 
-        // Message character counter
-        document.getElementById('sendMessage')?.addEventListener('input', function() {
-            document.getElementById('charCount').textContent = this.value.length;
-        });
+        // Event listeners for character counts
+        document.addEventListener('DOMContentLoaded', function() {
+            const sendMessage = document.getElementById('sendMessage');
+            if (sendMessage) {
+                sendMessage.addEventListener('input', function() {
+                    document.getElementById('charCount').textContent = this.value.length;
+                });
+            }
 
-        document.getElementById('bulkMessage')?.addEventListener('input', function() {
-            document.getElementById('bulkCharCount').textContent = this.value.length;
-        });
+            const bulkMessage = document.getElementById('bulkMessage');
+            if (bulkMessage) {
+                bulkMessage.addEventListener('input', function() {
+                    document.getElementById('bulkCharCount').textContent = this.value.length;
+                });
+            }
 
-        document.getElementById('bulkRecipients')?.addEventListener('input', function() {
-            const count = this.value.split('\n').filter(r => r.trim()).length;
-            document.getElementById('recipientCount').textContent = `${count} recipients`;
+            const bulkRecipients = document.getElementById('bulkRecipients');
+            if (bulkRecipients) {
+                bulkRecipients.addEventListener('input', function() {
+                    const count = this.value.split('\n').filter(r => r.trim()).length;
+                    document.getElementById('recipientCount').textContent = `${count} recipients`;
+                });
+            }
         });
 
         // Handle Enter key in login
         document.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter' && document.getElementById('loginModal').classList.contains('hidden') === false) {
+            if (e.key === 'Enter' && !document.getElementById('loginModal').classList.contains('hidden')) {
                 handleLogin();
             }
         });
